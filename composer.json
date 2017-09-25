@@ -1,0 +1,44 @@
+{
+    "name": "vanry/laravel-scout-tntsearch",
+    "description": "包含中文分词的 Laravel Scout TNTSearch 驱动，支持 scws 和 jieba 分词。",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "vanry",
+            "email": "ivanry@163.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.6.4",
+        "laravel/scout": "~3.0",
+        "teamtnt/tntsearch": "~1.0",
+        "illuminate/support": "~5.4",
+        "illuminate/database": "~5.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vanry\\Scout\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        },
+        "laravel": {
+            "providers": [
+                "Vanry\\Scout\\TNTSearchScoutServiceProvider"
+            ]
+        }
+    },
+    "suggest": {
+        "fukuball/jieba-php": "Required to use the Jieba tokenizer (~0.25).",
+        "vanry/scws": "Required to use the SCWS tokenizer (~1.0)."
+    }
+}
