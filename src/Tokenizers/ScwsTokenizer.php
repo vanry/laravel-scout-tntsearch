@@ -16,8 +16,10 @@ class ScwsTokenizer implements TokenizerInterface
 
     public function tokenize($text)
     {
-        $this->scws->sendText($text);
+        $this->scws->sendText(mb_convert_encoding($text, 'utf-8'));
 
-        return array_column($this->scws->getResult(), 'word');
+        $result = $this->scws->getResult();
+
+        return $result === false ? [] : array_column($result, 'word');
     }
 }
