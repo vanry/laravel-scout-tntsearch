@@ -71,7 +71,7 @@ php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
 
 ```
 
-你也可以在模型中直播添加 `asYouType` 选项, 参考下面的示例。
+你也可以在模型中直接添加 `asYouType` 选项, 参考下面的示例。
 
 ## 用法
 
