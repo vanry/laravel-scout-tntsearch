@@ -229,7 +229,12 @@ class TNTSearchEngine extends Engine
     {
         $indexName = $model->searchableAs();
 
-        if (! file_exists($this->tnt->config['storage']."/{$indexName}.index")) {
+        if (! file_exists($storage = $this->tnt->config['storage'])) {
+            mkdir($storage, 0777, true);
+            chmod($storage, 0777);
+        }
+
+        if (! file_exists($storage."/{$indexName}.index")) {
             $indexer = $this->tnt->createIndex("$indexName.index");
             $indexer->setDatabaseHandle($model->getConnection()->getPdo());
             $indexer->setPrimaryKey($model->getKeyName());

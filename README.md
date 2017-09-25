@@ -40,7 +40,7 @@ php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
 ```php
 
 'tntsearch' => [
-    'storage' => storage_path(),
+    'storage' => storage_path(), //必须有可写权限
     'fuzziness' => env('TNTSEARCH_FUZZINESS', false),
     'searchBoolean' => env('TNTSEARCH_BOOLEAN', false),
     'asYouType' => false,
