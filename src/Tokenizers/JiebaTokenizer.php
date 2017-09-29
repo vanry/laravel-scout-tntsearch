@@ -4,9 +4,8 @@ namespace Vanry\Scout\Tokenizers;
 
 use Fukuball\Jieba\Jieba;
 use Fukuball\Jieba\Finalseg;
-use TeamTNT\TNTSearch\Support\TokenizerInterface;
 
-class JiebaTokenizer implements TokenizerInterface
+class JiebaTokenizer extends Tokenizer
 {
     public function __construct(array $options = [])
     {
@@ -14,7 +13,7 @@ class JiebaTokenizer implements TokenizerInterface
         Finalseg::init($options);
     }
 
-    public function tokenize($text)
+    public function getTokens($text)
     {
         return Jieba::cutForSearch($text);
     }

@@ -3,9 +3,8 @@
 namespace Vanry\Scout\Tokenizers;
 
 use Latrell\Scws\Scws;
-use TeamTNT\TNTSearch\Support\TokenizerInterface;
 
-class ScwsTokenizer implements TokenizerInterface
+class ScwsTokenizer extends Tokenizer
 {
     protected $scws;
 
@@ -14,7 +13,7 @@ class ScwsTokenizer implements TokenizerInterface
         $this->scws = new Scws($config);
     }
 
-    public function tokenize($text)
+    public function getTokens($text)
     {
         $this->scws->sendText(mb_convert_encoding($text, 'utf-8'));
 
