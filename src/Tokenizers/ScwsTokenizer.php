@@ -15,7 +15,7 @@ class ScwsTokenizer extends Tokenizer
 
     public function getTokens($text)
     {
-        $this->scws->sendText(mb_convert_encoding($text, 'utf-8'));
+        $this->scws->sendText($text);
 
         $result = $this->scws->getResult();
 
