@@ -119,6 +119,8 @@ class Post extends Model
 
 目前支持 `jieba` 和 `scws` 中文分词，在 `.env` 文件中配置 `TNTSEARCH_TOKENIZER` 可选值 为 `jieba`, `scws`, `default`， `default` 为 `TNTSearch` 自带的分词器。
 
+> 考虑到性能问题，建议生产环境使用由`C`语言编写的`scws`分词扩展。
+
 - 使用 `jieba` 分词器，需安装 `fukuball/jieba-php`
 
         composer require fukuball/jieba-php
