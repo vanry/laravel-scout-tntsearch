@@ -4,7 +4,7 @@
 通过 `composer` 安装:
 
 ``` bash
-composer require vanry/laravel-scout-tntsearch-driver
+composer require vanry/laravel-scout-tntsearch
 ```
 
 添加到服务提供者:
