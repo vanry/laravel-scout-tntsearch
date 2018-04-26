@@ -7,6 +7,7 @@ use TeamTNT\TNTSearch\Support\Tokenizer;
 use Vanry\Scout\Tokenizers\NullTokenizer;
 use Vanry\Scout\Tokenizers\ScwsTokenizer;
 use Vanry\Scout\Tokenizers\JiebaTokenizer;
+use Vanry\Scout\Tokenizers\PhpAnalysisTokenizer;
 
 class TokenizerManager extends Manager
 {
@@ -18,6 +19,16 @@ class TokenizerManager extends Manager
     public function createJiebaDriver()
     {
         return new JiebaTokenizer($this->app['config']['scout.tntsearch.tokenizer.jieba']);
+    }
+
+    /**
+     * Create a PhpAnalysis tokenizer instance.
+     *
+     * @return \Vanry\Scout\Tokenizers\PhpAnalysisTokenizer
+     */
+    public function createAnalysisDriver()
+    {
+        return new PhpAnalysisTokenizer($this->app['config']['scout.tntsearch.tokenizer.analysis']);
     }
 
     /**

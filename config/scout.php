@@ -20,6 +20,13 @@ return [
                 'dict' => 'small',
             ],
 
+            'analysis' => [
+                'result_type' => 2,
+                'optimize' => true,
+                'differ_max' => true,
+                'unit_word' => true,
+            ],
+
             'scws' => [
                 'charset' => 'utf-8',
                 'dict' => '/usr/local/scws/etc/dict.utf8.xdb',

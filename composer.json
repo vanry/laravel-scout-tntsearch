@@ -39,6 +39,7 @@
     },
     "suggest": {
         "fukuball/jieba-php": "Required to use the Jieba tokenizer (~0.25).",
+        "lmz/phpanalysis": "Required to use the PhpAnalysis tokenizer (~1.0).",
         "vanry/scws": "Required to use the SCWS tokenizer (~1.0)."
     }
 }
