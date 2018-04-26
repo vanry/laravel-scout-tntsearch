@@ -3,7 +3,7 @@
 return [
 
     'tntsearch' => [
-        'storage' => storage_path('index'), //必须有可写权限
+        'storage' => storage_path('indexes'), //必须有可写权限
         'fuzziness' => env('TNTSEARCH_FUZZINESS', false),
         'searchBoolean' => env('TNTSEARCH_BOOLEAN', false),
         'asYouType' => false,
