@@ -29,5 +29,11 @@ return [
                 'duality' => false,
             ],
         ],
+
+        'stopwords' => [
+            '的',
+            '了',
+            '而是',
+        ],
     ],
 ];

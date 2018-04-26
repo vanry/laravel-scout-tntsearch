@@ -67,6 +67,12 @@ php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
             'duality' => false,
         ],
     ],
+
+    'stopwords' => [
+        '的',
+        '了',
+        '而是',
+    ],
 ],
 
 ```

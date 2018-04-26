@@ -45,6 +45,10 @@ class TNTSearchEngine extends Engine
         $index->setTokenizer($this->tnt->tokenizer);
         $index->setPrimaryKey($models->first()->getKeyName());
 
+        if (isset($this->tnt->config['stopwords'])) {
+            $index->setStopWords((array) $this->tnt->config['stopwords']);
+        }
+
         $index->indexBeginTransaction();
         $models->each(function ($model) use ($index) {
             $array = $model->toSearchableArray();
