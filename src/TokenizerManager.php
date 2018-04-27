@@ -3,6 +3,7 @@
 namespace Vanry\Scout;
 
 use Latrell\Scws\Scws;
+use Phpanalysis\Phpanalysis;
 use Illuminate\Support\Manager;
 use TeamTNT\TNTSearch\Support\Tokenizer;
 use Vanry\Scout\Tokenizers\ScwsTokenizer;
@@ -18,7 +19,7 @@ class TokenizerManager extends Manager
      */
     public function createJiebaDriver()
     {
-        return new JiebaTokenizer($this->app['config']['scout.tntsearch.tokenizer.jieba']);
+        return new JiebaTokenizer($this->getConfig('jieba'));
     }
 
     /**
@@ -30,7 +31,7 @@ class TokenizerManager extends Manager
     {
         $analysis = new Phpanalysis;
 
-        foreach ($this->app['config']['scout.tntsearch.tokenizer.analysis'] as $key => $value) {
+        foreach ($this->getConfig('analysis') as $key => $value) {
             $key = camel_case($key);
 
             if (property_exists($analysis, $key)) {
@@ -48,9 +49,7 @@ class TokenizerManager extends Manager
      */
     public function createScwsDriver()
     {
-        return new ScwsTokenizer(
-            new Scws($this->app['config']['scout.tntsearch.tokenizer.scws'])
-        );
+        return new ScwsTokenizer(new Scws($this->getConfig('scws')));
     }
 
     /**
@@ -64,12 +63,23 @@ class TokenizerManager extends Manager
     }
 
     /**
+     * Get the TNTSearch tokenizer configuration.
+     *
+     * @param  string  $name
+     * @return array
+     */
+    protected function getConfig($name)
+    {
+        return $this->app['config']["scout.tntsearch.tokenizer.{$name}"];
+    }
+
+    /**
      * Get the default session driver name.
      *
      * @return string
      */
     public function getDefaultDriver()
     {
-        return $this->app['config']['scout.tntsearch.tokenizer.driver'];
+        return $this->getConfig('driver');
     }
 }
