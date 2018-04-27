@@ -1,6 +1,6 @@
 {
     "name": "vanry/laravel-scout-tntsearch",
-    "description": "包含中文分词的 Laravel Scout TNTSearch 驱动，支持 scws 和 jieba 分词。",
+    "description": "包含中文分词的 Laravel Scout TNTSearch 驱动，支持 scws, phpanalysis 和 jieba 分词。",
     "type": "library",
     "license": "MIT",
     "authors": [

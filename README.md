@@ -58,6 +58,12 @@ php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
             'dict' => 'small',
         ],
 
+        'analysis' => [
+            'result_type' => 2,
+            'unit_word' => true,
+            'differ_max' => true,
+        ],
+
         'scws' => [
             'charset' => 'utf-8',
             'dict' => '/usr/local/scws/etc/dict.utf8.xdb',
@@ -131,8 +137,12 @@ class Post extends Model
 
         composer require fukuball/jieba-php
 
+- 使用 `phpanalysis` 分词器，需安装 `lmz/phpanalysis`
+
+        composer require lmz/phpanalysis
+
 - 使用 `scws` 分词器，需安装 `vanry/scws`
 
         composer require vanry/scws
 
-分别在 `config/scout.php` 中的 `jieba` 和 `scws` 中修改配置。
+分别在 `config/scout.php` 中的 `jieba`, `phpanalysis` 和 `scws` 中修改配置。
