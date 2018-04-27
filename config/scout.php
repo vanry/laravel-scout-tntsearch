@@ -22,9 +22,8 @@ return [
 
             'analysis' => [
                 'result_type' => 2,
-                'optimize' => true,
-                'differ_max' => true,
                 'unit_word' => true,
+                'differ_max' => true,
             ],
 
             'scws' => [
