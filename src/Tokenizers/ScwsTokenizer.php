@@ -8,9 +8,9 @@ class ScwsTokenizer extends Tokenizer
 {
     protected $scws;
 
-    public function __construct(array $config = [])
+    public function __construct(Scws $scws)
     {
-        $this->scws = new Scws($config);
+        $this->scws = $scws;
     }
 
     public function getTokens($text)
@@ -20,5 +20,10 @@ class ScwsTokenizer extends Tokenizer
         $result = $this->scws->getResult();
 
         return $result === false ? [] : array_column($result, 'word');
+    }
+
+    public function getScws()
+    {
+        return $this->scws;
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Vanry\Scout;
 
+use Latrell\Scws\Scws;
 use Illuminate\Support\Manager;
 use TeamTNT\TNTSearch\Support\Tokenizer;
-use Vanry\Scout\Tokenizers\NullTokenizer;
 use Vanry\Scout\Tokenizers\ScwsTokenizer;
 use Vanry\Scout\Tokenizers\JiebaTokenizer;
 use Vanry\Scout\Tokenizers\PhpAnalysisTokenizer;
@@ -38,7 +38,9 @@ class TokenizerManager extends Manager
      */
     public function createScwsDriver()
     {
-        return new ScwsTokenizer($this->app['config']['scout.tntsearch.tokenizer.scws']);
+        return new ScwsTokenizer(
+            new Scws($this->app['config']['scout.tntsearch.tokenizer.scws'])
+        );
     }
 
     /**
