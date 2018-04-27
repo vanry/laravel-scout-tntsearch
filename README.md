@@ -56,6 +56,7 @@ php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
 
         'jieba' => [
             'dict' => 'small',
+            //'user_dict' => resource_path('dicts/mydict.txt'), //自定义词典路径
         ],
 
         'analysis' => [
