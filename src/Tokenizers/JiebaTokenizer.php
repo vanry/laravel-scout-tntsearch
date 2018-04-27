@@ -10,6 +10,11 @@ class JiebaTokenizer extends Tokenizer
     public function __construct(array $options = [])
     {
         Jieba::init($options);
+
+        if (isset($options['user_dict'])) {
+            Jieba::loadUserDict($options['user_dict']);
+        }
+
         Finalseg::init($options);
     }
 
