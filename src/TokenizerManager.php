@@ -28,7 +28,17 @@ class TokenizerManager extends Manager
      */
     public function createAnalysisDriver()
     {
-        return new PhpAnalysisTokenizer($this->app['config']['scout.tntsearch.tokenizer.analysis']);
+        $analysis = new Phpanalysis;
+
+        foreach ($this->app['config']['scout.tntsearch.tokenizer.analysis'] as $key => $value) {
+            $key = camel_case($key);
+
+            if (property_exists($analysis, $key)) {
+                $analysis->$key = $value;
+            }
+        }
+
+        return new PhpAnalysisTokenizer($analysis);
     }
 
     /**

@@ -8,33 +8,26 @@ class PhpAnalysisTokenizer extends Tokenizer
 {
     protected $analysis;
 
-    protected $optimize;
-
-    public function __construct(array $config = [])
+    public function __construct(Phpanalysis $analysis)
     {
-        $this->analysis = new Phpanalysis;
-
-        foreach ($config as $key => $value) {
-            $key = camel_case($key);
-
-            if (property_exists($this->analysis, $key)) {
-                $this->analysis->$key = $value;
-            }
-        }
-
-        $this->optimize = isset($config['optimize']) ? $config['optimize'] : true;
+        $this->analysis = $analysis;
     }
 
     public function getTokens($text)
     {
         $this->analysis->SetSource($text);
 
-        $this->analysis->StartAnalysis($this->optimize);
+        $this->analysis->StartAnalysis();
 
         $result = $this->analysis->GetFinallyResult();
 
         $result = str_replace(['(', ')'], '', trim($result));
 
         return explode(' ', $result);
+    }
+
+    public function getAnalysis()
+    {
+        return $this->analysis;
     }
 }
