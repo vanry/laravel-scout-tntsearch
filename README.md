@@ -147,3 +147,6 @@ class Post extends Model
         composer require vanry/scws
 
 分别在 `config/scout.php` 中的 `jieba`, `phpanalysis` 和 `scws` 中修改配置。
+
+## 教程
+[laravel下TNTSearch+jieba-php实现全文搜索](https://baijunyao.com/article/154)
