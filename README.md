@@ -13,17 +13,8 @@ composer require vanry/laravel-scout-tntsearch
 // config/app.php
 'providers' => [
     // ...
-    Vanry\Scout\TNTSearchScoutServiceProvider::class,
-],
-```
-
-同时添加`Laravel Scout`的服务提供者，否则会产生 `"unresolvable dependency"` 的错误。
-
-```php
-// config/app.php
-'providers' => [
-    // ...
     Laravel\Scout\ScoutServiceProvider::class,
+    Vanry\Scout\TNTSearchScoutServiceProvider::class,
 ],
 ```
 
@@ -126,7 +117,7 @@ class Post extends Model
 
 使用模型进行搜索:
 
-`Post::search('Bugs Bunny')->get();`
+`Post::search('世界杯直播')->get();`
 
 ## 中文分词
 
