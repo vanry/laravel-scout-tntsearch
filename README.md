@@ -81,8 +81,6 @@ php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
 
 
 ```php
-<?php
-
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
@@ -139,5 +137,32 @@ class Post extends Model
 
 分别在 `config/scout.php` 中的 `jieba`, `phpanalysis` 和 `scws` 中修改配置。
 
+## 高亮
+
+在 `view composer` 中引入 `highlighter`
+
+```php
+use Vanry\Scout\Highlighter;
+
+// ...
+
+view()->composer('search', function ($view) {
+    $tokenizer = app('tntsearch.tokenizer')->driver();
+
+    $view->with('highlighter', new Highlighter($tokenizer));
+});
+```
+
+```php
+// search.blade.php
+
+{!! $highlighter->highlight($article->title, $query) !!}
+
+{!! $highlighter->highlight($article->excerpt, $query) !!}
+```
+
+> 默认使用 `em` 作为高亮标签，在 `css` 中设置样式即可。
+
 ## 教程
+
 [laravel下TNTSearch+jieba-php实现全文搜索](https://baijunyao.com/article/154)
