@@ -162,20 +162,6 @@ class TNTSearchEngine extends Engine
     }
 
     /**
-     * Get the filter array for the query.
-     *
-     * @param Builder $builder
-     *
-     * @return array
-     */
-    protected function filters(Builder $builder)
-    {
-        return collect($builder->wheres)->map(function ($value, $key) {
-            return $key.'='.$value;
-        })->values()->all();
-    }
-
-    /**
      * Map the given results to instances of the given model.
      *
      * @param mixed                               $results
