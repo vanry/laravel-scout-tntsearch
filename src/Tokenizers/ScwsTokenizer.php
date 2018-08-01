@@ -17,9 +17,13 @@ class ScwsTokenizer extends Tokenizer
     {
         $this->scws->sendText($text);
 
-        $result = $this->scws->getResult();
+        $tokens = [];
 
-        return $result === false ? [] : array_column($result, 'word');
+        while ($result = $this->scws->getResult()) {
+            $tokens = array_merge($tokens, array_column($result, 'word'));
+        }
+
+        return $tokens;
     }
 
     public function getScws()
