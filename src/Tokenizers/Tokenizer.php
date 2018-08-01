@@ -8,7 +8,9 @@ abstract class Tokenizer implements TokenizerInterface
 {
     public function tokenize($text, $stopwords = [])
     {
-        $tokens = is_numeric($text) ? [] : $this->getTokens($text);
+        $tokens = $this->getTokens($text);
+
+        $tokens = array_filter($tokens, 'trim');
 
         return array_diff($tokens, $stopwords);
     }
