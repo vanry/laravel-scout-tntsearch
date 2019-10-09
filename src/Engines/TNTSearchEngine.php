@@ -164,12 +164,13 @@ class TNTSearchEngine extends Engine
     /**
      * Map the given results to instances of the given model.
      *
-     * @param mixed                               $results
+     * @param Builder $builder
+     * @param mixed $results
      * @param \Illuminate\Database\Eloquent\Model $model
      *
      * @return Collection
      */
-    public function map($results, $model)
+    public function map(Builder $builder, $results, $model)
     {
         if (count($results['ids']) === 0) {
             return Collection::make();
@@ -228,6 +229,15 @@ class TNTSearchEngine extends Engine
             $indexer = $this->tnt->createIndex("$indexName.index");
             $indexer->setDatabaseHandle($model->getConnection()->getPdo());
             $indexer->setPrimaryKey($model->getKeyName());
+        }
+    }
+
+    public function flush($model)
+    {
+        $storage = $this->tnt->config['storage'] . "{$model->searchableAs()}.index";
+
+        if (file_exists($storage)) {
+            unlink($storage);
         }
     }
 }
