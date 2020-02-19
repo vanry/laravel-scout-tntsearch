@@ -2,10 +2,9 @@
 
 namespace Vanry\Scout\Engines;
 
-use Illuminate\Database\Eloquent\Collection;
 use Laravel\Scout\Builder;
-use Laravel\Scout\Engines\Engine;
 use TeamTNT\TNTSearch\TNTSearch;
+use Laravel\Scout\Engines\Engine;
 use TeamTNT\TNTSearch\Exceptions\IndexNotFoundException;
 
 class TNTSearchEngine extends Engine
@@ -33,23 +32,24 @@ class TNTSearchEngine extends Engine
     /**
      * Update the given model in the index.
      *
-     * @param Collection $models
+     * @param \Illuminate\Database\Eloquent\Collection $models
      *
      * @return void
      */
     public function update($models)
     {
-        $this->initIndex($models->first());
-        $this->tnt->selectIndex("{$models->first()->searchableAs()}.index");
-        $index = $this->tnt->getIndex();
-        $index->setTokenizer($this->tnt->tokenizer);
-        $index->setPrimaryKey($models->first()->getKeyName());
+        $model = $models->first();
 
-        if (isset($this->tnt->config['stopwords'])) {
-            $index->setStopWords((array) $this->tnt->config['stopwords']);
-        }
+        $this->initIndex($model);
+
+        $index = $this->tnt->getIndex();
+
+        $index->setPrimaryKey($model->getKeyName());
+        $index->setTokenizer($this->tnt->tokenizer);
+        $index->setStopWords($this->tnt->config['stopwords'] ?? []);
 
         $index->indexBeginTransaction();
+
         $models->each(function ($model) use ($index) {
             $array = $model->toSearchableArray();
 
@@ -63,24 +63,23 @@ class TNTSearchEngine extends Engine
                 $index->insert($array);
             }
         });
+
         $index->indexEndTransaction();
     }
 
     /**
      * Remove the given model from the index.
      *
-     * @param Collection $models
+     * @param \Illuminate\Database\Eloquent\Collection $models
      *
      * @return void
      */
     public function delete($models)
     {
         $this->initIndex($models->first());
+
         $models->each(function ($model) {
-            $this->tnt->selectIndex("{$model->searchableAs()}.index");
-            $index = $this->tnt->getIndex();
-            $index->setPrimaryKey($model->getKeyName());
-            $index->delete($model->getKey());
+            $this->tnt->getIndex()->delete($model->getKey());
         });
     }
 
@@ -139,26 +138,23 @@ class TNTSearchEngine extends Engine
      */
     protected function performSearch(Builder $builder, array $options = [])
     {
+        $this->builder = $builder;
+
         $index = $builder->index ?: $builder->model->searchableAs();
-        $limit = $builder->limit ?: 10000;
+
         $this->tnt->selectIndex("{$index}.index");
 
-        $this->builder = $builder;
         $this->tnt->asYouType = $builder->model->asYouType ?: false;
 
         if ($builder->callback) {
-            return call_user_func(
-                $builder->callback,
-                $this->tnt,
-                $builder->query,
-                $options
-            );
+            return call_user_func($builder->callback, $this->tnt, $builder->query, $options);
         }
-        if (isset($this->tnt->config['searchBoolean']) ? $this->tnt->config['searchBoolean'] : false) {
-            return $this->tnt->searchBoolean($builder->query, $limit);
-        } else {
-            return $this->tnt->search($builder->query, $limit);
-        }
+
+        $limit = $builder->limit ?: 10000;
+
+        return ($this->tnt->config['searchBoolean'] ?? false)
+            ? $this->tnt->searchBoolean($builder->query, $limit)
+            : $this->tnt->search($builder->query, $limit);
     }
 
     /**
@@ -168,20 +164,19 @@ class TNTSearchEngine extends Engine
      * @param mixed $results
      * @param \Illuminate\Database\Eloquent\Model $model
      *
-     * @return Collection
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function map(Builder $builder, $results, $model)
     {
         if (count($results['ids']) === 0) {
-            return Collection::make();
+            return $model->newCollection();
         }
 
         $keys = collect($results['ids'])->values()->all();
+
+        $models = $model->whereIn($model->getQualifiedKeyName(), $keys)->get()->keyBy($model->getKeyName());
+
         $fieldsWheres = array_keys($this->builder->wheres);
-        $models = $model->whereIn(
-            $model->getQualifiedKeyName(),
-            $keys
-        )->get()->keyBy($model->getKeyName());
 
         return collect($results['ids'])->map(function ($hit) use ($models) {
             return $models->has($hit) ? $models[$hit] : null;
@@ -189,7 +184,6 @@ class TNTSearchEngine extends Engine
             return ! is_null($model) && array_reduce($fieldsWheres, function ($carry, $item) use ($model) {
                 return $carry && $model[$item] == $this->builder->wheres[$item];
             }, true);
-            ;
         });
     }
 
@@ -218,26 +212,34 @@ class TNTSearchEngine extends Engine
 
     public function initIndex($model)
     {
-        $indexName = $model->searchableAs();
-
-        if (! file_exists($storage = $this->tnt->config['storage'])) {
-            mkdir($storage, 0777, true);
-            chmod($storage, 0777);
+        if (! file_exists($this->tnt->config['storage'])) {
+            mkdir($this->tnt->config['storage'], 0777, true);
         }
 
-        if (! file_exists($storage."/{$indexName}.index")) {
-            $indexer = $this->tnt->createIndex("$indexName.index");
+        $indexPath = $this->getIndexPath($model);
+
+        $indexName = basename($indexPath);
+
+        if (! file_exists($indexPath)) {
+            $indexer = $this->tnt->createIndex($indexName);
             $indexer->setDatabaseHandle($model->getConnection()->getPdo());
             $indexer->setPrimaryKey($model->getKeyName());
         }
+
+        $this->tnt->selectIndex($indexName);
     }
 
     public function flush($model)
     {
-        $storage = $this->tnt->config['storage'] . "{$model->searchableAs()}.index";
+        $indexPath = $this->getIndexPath($model);
 
-        if (file_exists($storage)) {
-            unlink($storage);
+        if (file_exists($indexPath)) {
+            unlink($indexPath);
         }
+    }
+
+    protected function getIndexPath($model)
+    {
+        return sprintf('%s/%s.index', $this->tnt->config['storage'], $model->searchableAs());
     }
 }

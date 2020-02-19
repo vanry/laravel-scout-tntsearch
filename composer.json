@@ -11,11 +11,11 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "php": ">=5.6.4",
-        "laravel/scout": "^7.1",
+        "php": ">=7.0",
+        "laravel/scout": "~6.0",
         "teamtnt/tntsearch": "~1.0",
-        "illuminate/support": "^6.0",
-        "illuminate/database": "^6.0"
+        "illuminate/support": "~5.4",
+        "illuminate/database": "~5.4"
     },
     "require-dev": {
         "mockery/mockery": "~0.9",

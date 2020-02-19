@@ -31,7 +31,7 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->app[EngineManager::class]->extend('tntsearch', function ($app) {
-            $tnt = new TNTSearch();
+            $tnt = new TNTSearch;
 
             $driver = config('database.default');
             $config = config('scout.tntsearch') + config("database.connections.{$driver}");
@@ -40,11 +40,16 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
             $tnt->setTokenizer(app('tntsearch.tokenizer')->driver());
             $tnt->setDatabaseHandle(app('db')->connection()->getPdo());
 
-            $this->setFuzziness($tnt);
             $this->setAsYouType($tnt);
+            $this->setFuzziness($tnt);
 
             return new TNTSearchEngine($tnt);
         });
+    }
+
+    protected function setAsYouType($tnt)
+    {
+        $tnt->asYouType = config('scout.tntsearch.asYouType', $tnt->asYouType);
     }
 
     protected function setFuzziness($tnt)
@@ -53,10 +58,5 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
         $tnt->fuzzy_distance = config('scout.tntsearch.fuzzy.distance', $tnt->fuzzy_distance);
         $tnt->fuzzy_prefix_length = config('scout.tntsearch.fuzzy.prefix_length', $tnt->fuzzy_prefix_length);
         $tnt->fuzzy_max_expansions = config('scout.tntsearch.fuzzy.max_expansions', $tnt->fuzzy_max_expansions);
-    }
-
-    protected function setAsYouType($tnt)
-    {
-        $tnt->asYouType = config('scout.tntsearch.asYouType', $tnt->asYouType);
     }
 }
