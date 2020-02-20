@@ -1,21 +1,25 @@
 {
     "name": "vanry/laravel-scout-tntsearch",
     "description": "包含中文分词的 Laravel Scout TNTSearch 驱动，支持 scws, phpanalysis 和 jieba 分词。",
-    "type": "library",
+    "keywords": ["tntsearch", "search", "scout", "laravel"],
     "license": "MIT",
+    "type": "library",
+    "support": {
+        "issues": "https://github.com/vanry/laravel-scout-tntsearch/issues",
+        "source": "https://github.com/vanry/laravel-scout-tntsearch"
+    },
     "authors": [
         {
             "name": "vanry",
             "email": "ivanry@163.com"
         }
     ],
-    "minimum-stability": "dev",
     "require": {
         "php": ">=7.0",
+        "illuminate/database": "~5.5",
+        "illuminate/support": "~5.5",
         "laravel/scout": "~6.0",
-        "teamtnt/tntsearch": "~1.0",
-        "illuminate/support": "~5.4",
-        "illuminate/database": "~5.4"
+        "teamtnt/tntsearch": "~2.0"
     },
     "require-dev": {
         "mockery/mockery": "~0.9",
@@ -33,7 +37,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "1.0-dev"
+            "dev-master": "2.0-dev"
         },
         "laravel": {
             "providers": [
@@ -45,5 +49,9 @@
         "fukuball/jieba-php": "Required to use the Jieba tokenizer (~0.25).",
         "lmz/phpanalysis": "Required to use the PhpAnalysis tokenizer (~1.0).",
         "vanry/scws": "Required to use the SCWS tokenizer (~1.0)."
-    }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev"
 }
