@@ -45,7 +45,6 @@ class TNTSearchEngine extends Engine
         $index = $this->tnt->getIndex();
 
         $index->setPrimaryKey($model->getKeyName());
-        $index->setTokenizer($this->tnt->tokenizer);
         $index->setStopWords($this->tnt->config['stopwords'] ?? []);
 
         $index->indexBeginTransaction();
