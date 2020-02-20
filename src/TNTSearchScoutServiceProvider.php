@@ -2,6 +2,7 @@
 
 namespace Vanry\Scout;
 
+use InvalidArgumentException;
 use Laravel\Scout\EngineManager;
 use TeamTNT\TNTSearch\TNTSearch;
 use Illuminate\Support\ServiceProvider;
@@ -16,11 +17,13 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/scout.php', 'scout');
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../config/tntsearch.php' => config_path('tntsearch.php'),
+            ]);
+        }
 
-        $this->app->singleton('tntsearch.tokenizer', function ($app) {
-            return new TokenizerManager($app);
-        });
+        $this->mergeConfigFrom(__DIR__.'/../config/tntsearch.php', 'tntsearch');
     }
 
     /**
@@ -33,11 +36,7 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
         $this->app[EngineManager::class]->extend('tntsearch', function ($app) {
             $tnt = new TNTSearch;
 
-            $driver = config('database.default');
-            $config = config('scout.tntsearch') + config("database.connections.{$driver}");
-
-            $tnt->loadConfig($config);
-            $tnt->setTokenizer(app('tntsearch.tokenizer')->driver());
+            $tnt->loadConfig($this->getConfig());
             $tnt->setDatabaseHandle(app('db')->connection()->getPdo());
 
             $this->setAsYouType($tnt);
@@ -47,16 +46,29 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
         });
     }
 
+    protected function getConfig()
+    {
+        $driver = config('database.default');
+
+        $config = config('tntsearch') + config("database.connections.{$driver}");
+
+        if (! array_key_exists($config['default'], $config['tokenizers'])) {
+            throw new InvalidArgumentException("Tokenizer [{$config['default']}] is not defined.");
+        }
+
+        return array_merge($config, ['tokenizer' => $config['tokenizers'][$config['default']]['driver']]);
+    }
+
     protected function setAsYouType($tnt)
     {
-        $tnt->asYouType = config('scout.tntsearch.asYouType', $tnt->asYouType);
+        $tnt->asYouType = config('tntsearch.asYouType', $tnt->asYouType);
     }
 
     protected function setFuzziness($tnt)
     {
-        $tnt->fuzziness = config('scout.tntsearch.fuzziness', $tnt->fuzziness);
-        $tnt->fuzzy_distance = config('scout.tntsearch.fuzzy.distance', $tnt->fuzzy_distance);
-        $tnt->fuzzy_prefix_length = config('scout.tntsearch.fuzzy.prefix_length', $tnt->fuzzy_prefix_length);
-        $tnt->fuzzy_max_expansions = config('scout.tntsearch.fuzzy.max_expansions', $tnt->fuzzy_max_expansions);
+        $tnt->fuzziness = config('tntsearch.fuzziness', $tnt->fuzziness);
+        $tnt->fuzzy_distance = config('tntsearch.fuzzy.distance', $tnt->fuzzy_distance);
+        $tnt->fuzzy_prefix_length = config('tntsearch.fuzzy.prefix_length', $tnt->fuzzy_prefix_length);
+        $tnt->fuzzy_max_expansions = config('tntsearch.fuzzy.max_expansions', $tnt->fuzzy_max_expansions);
     }
 }
