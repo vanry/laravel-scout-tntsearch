@@ -8,7 +8,7 @@ abstract class Tokenizer implements TokenizerInterface
 {
     public function getConfig($name)
     {
-       $config = config("tntsearch.tokenizers.{$name}");
+        $config = config("tntsearch.tokenizers.{$name}");
 
         unset($config['driver']);
 
