@@ -5,6 +5,7 @@ namespace Vanry\Scout;
 use InvalidArgumentException;
 use Laravel\Scout\EngineManager;
 use TeamTNT\TNTSearch\TNTSearch;
+use Vanry\Scout\Console\ImportCommand;
 use Illuminate\Support\ServiceProvider;
 use Vanry\Scout\Engines\TNTSearchEngine;
 
@@ -18,6 +19,8 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
     public function register()
     {
         if ($this->app->runningInConsole()) {
+            $this->commands(ImportCommand::class);
+
             $this->publishes([
                 __DIR__.'/../config/tntsearch.php' => config_path('tntsearch.php'),
             ]);
