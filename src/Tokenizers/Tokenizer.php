@@ -6,6 +6,15 @@ use TeamTNT\TNTSearch\Support\TokenizerInterface;
 
 abstract class Tokenizer implements TokenizerInterface
 {
+    public function getConfig($name)
+    {
+       $config = config("tntsearch.tokenizers.{$name}");
+
+        unset($config['driver']);
+
+        return $config;
+    }
+
     public function tokenize($text, $stopwords = [])
     {
         $tokens = $this->getTokens($text);

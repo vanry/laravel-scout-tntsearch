@@ -7,15 +7,17 @@ use Fukuball\Jieba\Finalseg;
 
 class JiebaTokenizer extends Tokenizer
 {
-    public function __construct(array $options = [])
+    public function __construct()
     {
-        Jieba::init($options);
+        $config = $this->getConfig('jieba');
 
-        if (isset($options['user_dict'])) {
-            Jieba::loadUserDict($options['user_dict']);
+        Jieba::init($config);
+
+        if (isset($config['user_dict'])) {
+            Jieba::loadUserDict($config['user_dict']);
         }
 
-        Finalseg::init($options);
+        Finalseg::init($config);
     }
 
     public function getTokens($text)

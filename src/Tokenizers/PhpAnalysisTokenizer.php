@@ -8,9 +8,17 @@ class PhpAnalysisTokenizer extends Tokenizer
 {
     protected $analysis;
 
-    public function __construct(Phpanalysis $analysis)
+    public function __construct()
     {
-        $this->analysis = $analysis;
+        $this->analysis = new Phpanalysis;
+
+        foreach ($this->getConfig('analysis') as $key => $value) {
+            $key = camel_case($key);
+
+            if (property_exists($this->analysis, $key)) {
+                $this->analysis->$key = $value;
+            }
+        }
     }
 
     public function getTokens($text)

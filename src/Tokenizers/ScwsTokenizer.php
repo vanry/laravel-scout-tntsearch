@@ -8,9 +8,9 @@ class ScwsTokenizer extends Tokenizer
 {
     protected $scws;
 
-    public function __construct(Scws $scws)
+    public function __construct()
     {
-        $this->scws = $scws;
+        $this->scws = new Scws($this->getConfig('scws'));
     }
 
     public function getTokens($text)
