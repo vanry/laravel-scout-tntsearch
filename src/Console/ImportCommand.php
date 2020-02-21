@@ -2,10 +2,9 @@
 
 namespace Vanry\Scout\Console;
 
+use InvalidArgumentException;
 use Illuminate\Console\Command;
 use TeamTNT\TNTSearch\TNTSearch;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Contracts\Events\Dispatcher;
 
 class ImportCommand extends Command
 {
@@ -26,48 +25,70 @@ class ImportCommand extends Command
     /**
      * Execute the console command.
      *
-     * @param \Illuminate\Contracts\Events\Dispatcher $events
-     *
      * @return void
      */
-    public function handle(Dispatcher $events)
+    public function handle()
     {
         $class = $this->argument('model');
 
         $model = new $class;
 
-        $driver = $model->getConnectionName() ?: config('database.default');
+        $indexer = $this->initIndex($model);
 
-        $config = config('tntsearch') + config("database.connections.$driver");
-
-        $db = app('db')->connection($driver);
-
-        $tnt = new TNTSearch;
-
-        $tnt->loadConfig($config);
-
-        $tnt->setDatabaseHandle($db->getPdo());
-
-        $indexer = $tnt->createIndex("{$model->searchableAs()}.index");
-
-        $indexer->setPrimaryKey($model->getKeyName());
-
-        $availableColumns = Schema::connection($driver)->getColumnListing($model->getTable());
-
-        $desiredColumns = array_keys($model->toSearchableArray());
-
-        $fields = array_intersect($desiredColumns, $availableColumns);
-
-        $query = $db->table($model->getTable());
-
-        if ($fields) {
-            $query->select($model->getKeyName())->addSelect($fields);
-        }
-
-        $indexer->query($query->toSql());
+        $indexer->query($this->getSql($model));
 
         $indexer->run();
 
         $this->info("All [{$class}] records have been imported.");
+    }
+
+    protected function initIndex($model)
+    {
+        $tnt = new TNTSearch;
+
+        $tnt->loadConfig($this->getConfig($model));
+
+        $tnt->setDatabaseHandle($model->getConnection()->getPdo());
+
+        $indexer = $tnt->createIndex("{$model->searchableAs()}.index");
+
+        $indexer->inMemory = false;
+
+        $indexer->setPrimaryKey($model->getKeyName());
+
+        return $indexer;
+    }
+
+    protected function getConfig($model)
+    {
+        $driver = $model->getConnectionName() ?: config('database.default');
+
+        $config = config('tntsearch') + config("database.connections.{$driver}");
+
+        if (! array_key_exists($config['default'], $config['tokenizers'])) {
+            throw new InvalidArgumentException("Tokenizer [{$config['default']}] is not defined.");
+        }
+
+        return array_merge($config, ['tokenizer' => $config['tokenizers'][$config['default']]['driver']]);
+    }
+
+    protected function getSql($model)
+    {
+        $query = $model->newQuery();
+
+        if ($fields = $this->getSearchableFields($model)) {
+            $query->select($model->getKeyName())->addSelect($fields);
+        }
+
+        return $query->toSql();
+    }
+
+    protected function getSearchableFields($model)
+    {
+        $availableColumns = $model->getConnection()->getSchemaBuilder()->getColumnListing($model->getTable());
+
+        $desiredColumns = array_keys($model->toSearchableArray());
+
+        return array_intersect($desiredColumns, $availableColumns);
     }
 }
