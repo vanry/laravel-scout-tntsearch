@@ -42,9 +42,6 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
             $tnt->loadConfig($this->getConfig());
             $tnt->setDatabaseHandle(app('db')->connection()->getPdo());
 
-            $this->setAsYouType($tnt);
-            $this->setFuzziness($tnt);
-
             return new TNTSearchEngine($tnt);
         });
     }
@@ -60,18 +57,5 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
         }
 
         return array_merge($config, ['tokenizer' => $config['tokenizers'][$config['default']]['driver']]);
-    }
-
-    protected function setAsYouType($tnt)
-    {
-        $tnt->asYouType = config('tntsearch.asYouType', $tnt->asYouType);
-    }
-
-    protected function setFuzziness($tnt)
-    {
-        $tnt->fuzziness = config('tntsearch.fuzziness', $tnt->fuzziness);
-        $tnt->fuzzy_distance = config('tntsearch.fuzzy.distance', $tnt->fuzzy_distance);
-        $tnt->fuzzy_prefix_length = config('tntsearch.fuzzy.prefix_length', $tnt->fuzzy_prefix_length);
-        $tnt->fuzzy_max_expansions = config('tntsearch.fuzzy.max_expansions', $tnt->fuzzy_max_expansions);
     }
 }

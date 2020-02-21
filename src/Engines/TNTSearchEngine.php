@@ -143,17 +143,11 @@ class TNTSearchEngine extends Engine
 
         $this->tnt->selectIndex("{$index}.index");
 
-        $this->tnt->asYouType = $builder->model->asYouType ?: false;
-
         if ($builder->callback) {
             return call_user_func($builder->callback, $this->tnt, $builder->query, $options);
         }
 
-        $limit = $builder->limit ?: 10000;
-
-        return ($this->tnt->config['searchBoolean'] ?? false)
-            ? $this->tnt->searchBoolean($builder->query, $limit)
-            : $this->tnt->search($builder->query, $limit);
+        return $this->tnt->search($builder->query, $builder->limit ?: 10000);
     }
 
     /**
