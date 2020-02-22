@@ -15,11 +15,6 @@ class TNTSearchEngine extends Engine
     protected $tnt;
 
     /**
-     * @var Builder
-     */
-    protected $builder;
-
-    /**
      * Create a new engine instance.
      *
      * @param TNTSearch $tnt
@@ -40,9 +35,7 @@ class TNTSearchEngine extends Engine
     {
         $model = $models->first();
 
-        $this->initIndex($model);
-
-        $index = $this->tnt->getIndex();
+        $index = $this->initIndex($model);
 
         $index->setPrimaryKey($model->getKeyName());
         $index->setStopWords($this->tnt->config['stopwords'] ?? []);
@@ -75,10 +68,10 @@ class TNTSearchEngine extends Engine
      */
     public function delete($models)
     {
-        $this->initIndex($models->first());
+        $index = $this->initIndex($models->first());
 
-        $models->each(function ($model) {
-            $this->tnt->getIndex()->delete($model->getKey());
+        $models->each(function ($model) use ($index) {
+            $index->delete($model->getKey());
         });
     }
 
@@ -94,7 +87,9 @@ class TNTSearchEngine extends Engine
         try {
             return $this->performSearch($builder);
         } catch (IndexNotFoundException $e) {
-            $this->initIndex($builder->model);
+            $this->createIndex($builder->model);
+
+            return $this->performSearch($builder);
         }
     }
 
@@ -109,7 +104,7 @@ class TNTSearchEngine extends Engine
      */
     public function paginate(Builder $builder, $perPage, $page)
     {
-        $results = $this->performSearch($builder);
+        $results = $this->search($builder);
 
         if ($builder->limit) {
             $results['hits'] = $builder->limit;
@@ -137,8 +132,6 @@ class TNTSearchEngine extends Engine
      */
     protected function performSearch(Builder $builder, array $options = [])
     {
-        $this->builder = $builder;
-
         $index = $builder->index ?: $builder->model->searchableAs();
 
         $this->tnt->selectIndex("{$index}.index");
@@ -169,13 +162,13 @@ class TNTSearchEngine extends Engine
 
         $models = $model->whereIn($model->getQualifiedKeyName(), $keys)->get()->keyBy($model->getKeyName());
 
-        $fieldsWheres = array_keys($this->builder->wheres);
+        $fieldsWheres = array_keys($builder->wheres);
 
         return collect($results['ids'])->map(function ($hit) use ($models) {
             return $models->has($hit) ? $models[$hit] : null;
-        })->filter(function ($model) use ($fieldsWheres) {
-            return ! is_null($model) && array_reduce($fieldsWheres, function ($carry, $item) use ($model) {
-                return $carry && $model[$item] == $this->builder->wheres[$item];
+        })->filter(function ($model) use ($fieldsWheres, $builder) {
+            return ! is_null($model) && array_reduce($fieldsWheres, function ($carry, $item) use ($model, $builder) {
+                return $carry && $model[$item] == $builder->wheres[$item];
             }, true);
         });
     }
@@ -203,36 +196,44 @@ class TNTSearchEngine extends Engine
         return $results['hits'];
     }
 
-    public function initIndex($model)
+    protected function initIndex($model)
+    {
+        $indexName = $this->indexName($model);
+
+        if (! file_exists($this->indexPath($model))) {
+            $this->createIndex($indexName);
+        }
+
+        $this->tnt->selectIndex($indexName);
+
+        return $this->tnt->getIndex();
+    }
+
+    protected function indexName($model)
+    {
+        return $model->searchableAs().'.index';
+    }
+
+    protected function indexPath($model)
+    {
+        return $this->tnt->config['storage'].'/'.$this->indexName($model);
+    }
+
+    protected function createIndex($model)
     {
         if (! file_exists($this->tnt->config['storage'])) {
             mkdir($this->tnt->config['storage'], 0777, true);
         }
 
-        $indexPath = $this->getIndexPath($model);
-
-        $indexName = basename($indexPath);
-
-        if (! file_exists($indexPath)) {
-            $indexer = $this->tnt->createIndex($indexName);
-            $indexer->setDatabaseHandle($model->getConnection()->getPdo());
-            $indexer->setPrimaryKey($model->getKeyName());
-        }
-
-        $this->tnt->selectIndex($indexName);
+        $this->tnt->createIndex($this->indexName($model));
     }
 
     public function flush($model)
     {
-        $indexPath = $this->getIndexPath($model);
+        $indexPath = $this->indexPath($model);
 
         if (file_exists($indexPath)) {
             unlink($indexPath);
         }
-    }
-
-    protected function getIndexPath($model)
-    {
-        return sprintf('%s/%s.index', $this->tnt->config['storage'], $model->searchableAs());
     }
 }
