@@ -33,11 +33,11 @@ class ImportCommand extends Command
 
         $model = new $class;
 
-        $indexer = $this->initIndex($model);
+        $index = $this->initIndex($model);
 
-        $indexer->query($this->getSql($model));
+        $index->query($this->getSql($model));
 
-        $indexer->run();
+        $index->run();
 
         $this->info("All [{$class}] records have been imported.");
     }
@@ -50,13 +50,13 @@ class ImportCommand extends Command
 
         $tnt->setDatabaseHandle($model->getConnection()->getPdo());
 
-        $indexer = $tnt->createIndex("{$model->searchableAs()}.index");
+        $index = $tnt->createIndex("{$model->searchableAs()}.index");
 
-        $indexer->inMemory = false;
+        $index->inMemory = false;
 
-        $indexer->setPrimaryKey($model->getKeyName());
+        $index->setPrimaryKey($model->getKeyName());
 
-        return $indexer;
+        return $index;
     }
 
     protected function getConfig($model)
@@ -74,7 +74,7 @@ class ImportCommand extends Command
 
     protected function getSql($model)
     {
-        $query = $model->newQuery();
+        $query = $model->newQueryWithoutScopes();
 
         if ($fields = $this->getSearchableFields($model)) {
             $query->select($model->getKeyName())->addSelect($fields);
