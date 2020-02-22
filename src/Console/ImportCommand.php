@@ -50,6 +50,10 @@ class ImportCommand extends Command
 
         $tnt->setDatabaseHandle($model->getConnection()->getPdo());
 
+        if (! file_exists($tnt->config['storage'])) {
+            mkdir($tnt->config['storage'], 0777, true);
+        }
+
         $index = $tnt->createIndex("{$model->searchableAs()}.index");
 
         $index->inMemory = false;

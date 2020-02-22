@@ -198,13 +198,11 @@ class TNTSearchEngine extends Engine
 
     protected function initIndex($model)
     {
-        $indexName = $this->indexName($model);
-
         if (! file_exists($this->indexPath($model))) {
-            $this->createIndex($indexName);
+            $this->createIndex($model);
         }
 
-        $this->tnt->selectIndex($indexName);
+        $this->tnt->selectIndex($this->indexName($model));
 
         return $this->tnt->getIndex();
     }

@@ -2,6 +2,7 @@
 
 namespace Vanry\Scout\Tokenizers;
 
+use Illuminate\Support\Str;
 use Phpanalysis\Phpanalysis;
 
 class PhpAnalysisTokenizer extends Tokenizer
@@ -13,7 +14,7 @@ class PhpAnalysisTokenizer extends Tokenizer
         $this->analysis = new Phpanalysis;
 
         foreach ($this->getConfig('analysis') as $key => $value) {
-            $key = camel_case($key);
+            $key = Str::camel($key);
 
             if (property_exists($this->analysis, $key)) {
                 $this->analysis->$key = $value;
