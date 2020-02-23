@@ -13,7 +13,7 @@ class PhpAnalysisTokenizer extends Tokenizer
     {
         $this->analysis = new Phpanalysis;
 
-        foreach ($this->getConfig('analysis') as $key => $value) {
+        foreach ($this->getConfig('phpanalysis') as $key => $value) {
             $key = Str::camel($key);
 
             if (property_exists($this->analysis, $key)) {

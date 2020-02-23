@@ -19,7 +19,7 @@ return [
             //'user_dict' => resource_path('dicts/mydict.txt'),
         ],
 
-        'analysis' => [
+        'phpanalysis' => [
             'driver' => Vanry\Scout\Tokenizers\PhpAnalysisTokenizer::class,
             'to_lower' => true,
             'unit_word' => true,
