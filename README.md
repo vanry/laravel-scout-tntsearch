@@ -1,84 +1,57 @@
 
+> 说明: `2.x` 版本只支持 `Laravel 5.5` 以上版本，`Laravel 5.5`以下版本请使用 [1.x版本](https://github.com/vanry/laravel-scout-tntsearch/tree/1.x)。
+
 ## 安装
 
-通过 `composer` 安装:
+通过 `composer` 安装
 
 ``` bash
 composer require vanry/laravel-scout-tntsearch
 ```
 
-添加到服务提供者:
+### Laravel
 
-```php
-// config/app.php
-'providers' => [
-    // ...
-    Laravel\Scout\ScoutServiceProvider::class,
-    Vanry\Scout\TNTSearchScoutServiceProvider::class,
-],
-```
+`Laravel` 具有包自动发现功能，不用手动添加服务提供者。
 
-在 `.env` 文件中添加 `SCOUT_DRIVER=tntsearch`
-
-然后就可以将 `scout.php` 配置文件发布到 `config` 目录。
+发布 `scout` 配置文件
 
 ```bash
 php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
 ```
 
-在 `config/scout.php` 中添加:
+如果要修改 `tntsearch` 默认配置，也可发布 `tntsearch` 配置文件
 
-```php
-
-'tntsearch' => [
-    'storage' => storage_path('indexes'), //必须有可写权限
-    'fuzziness' => env('TNTSEARCH_FUZZINESS', false),
-    'searchBoolean' => env('TNTSEARCH_BOOLEAN', false),
-    'asYouType' => false,
-
-    'fuzzy' => [
-        'prefix_length' => 2,
-        'max_expansions' => 50,
-        'distance' => 2,
-    ],
-
-    'tokenizer' => [
-        'driver' => env('TNTSEARCH_TOKENIZER', 'default'),
-
-        'jieba' => [
-            'dict' => 'small',
-            //'user_dict' => resource_path('dicts/mydict.txt'), //自定义词典路径
-        ],
-
-        'analysis' => [
-            'result_type' => 2,
-            'unit_word' => true,
-            'differ_max' => true,
-        ],
-
-        'scws' => [
-            'charset' => 'utf-8',
-            'dict' => '/usr/local/scws/etc/dict.utf8.xdb',
-            'rule' => '/usr/local/scws/etc/rules.utf8.ini',
-            'multi' => 1,
-            'ignore' => true,
-            'duality' => false,
-        ],
-    ],
-
-    'stopwords' => [
-        '的',
-        '了',
-        '而是',
-    ],
-],
-
+```bash
+php artisan vendor:publish --provider="Vanry\Scout\TNTSearchScoutServiceProvider"
 ```
 
-你也可以在模型中直接添加 `asYouType` 选项, 参考下面的示例。
+### Lumen
+
+`Lumen` 需将服务提供者添加到 `bootstrap/app.php`
+
+```php
+// bootstrap/app.php
+
+// 取消注释
+$app->withEloquent()
+
+// 注意先后顺序
+$app->register(Vanry\Scout\LumenServiceProvider::class);
+$app->register(Laravel\Scout\ScoutServiceProvider::class);
+```
+
+### 启用
+
+在 `.env` 文件中添加
+
+```bash
+SCOUT_DRIVER=tntsearch
+```
+
 
 ## 用法
 
+* 添加 `Searchable Trait` 到模型
 
 ```php
 namespace App;
@@ -89,8 +62,6 @@ use Laravel\Scout\Searchable;
 class Post extends Model
 {
     use Searchable;
-
-    public $asYouType = true;
 
     /**
      * Get the indexable data array for the model.
@@ -108,48 +79,76 @@ class Post extends Model
 }
 ```
 
-同步数据到搜索服务:
+* 同步数据到搜索索引
 
-`php artisan scout:import App\\Post`
+```php
+# scout 命令
+php artisan scout:import App\\Post
+
+# tntsearch 命令, 性能更好
+php artisan tntsearch:import App\\Post
+```
 
 
-使用模型进行搜索:
+* 使用模型进行搜索
 
-`Post::search('世界杯直播')->get();`
+```php
+Post::search('laravel教程')->get();
+```
 
 ## 中文分词
 
-目前支持 `jieba`, `phpanalysis` 和 `scws` 中文分词，在 `.env` 文件中配置 `TNTSEARCH_TOKENIZER` 可选值 为 `jieba`, `analysis`, `scws`, `default`， 其中 `default` 为 `TNTSearch` 自带的分词器。
+目前支持 `scws`, `jieba` 和 `phpanalysis` 中文分词。
 
-> 考虑到性能问题，建议生产环境使用由`C`语言编写的`scws`分词扩展。
+### 对比
 
-- 使用 `jieba` 分词器，需安装 `fukuball/jieba-php`
+* `scws` 是用 `C` 语言编写的 `php` 扩展，性能最佳，分词效果好，但不支持 `Windows` 系统。
+* `jieba` 为 `python` 版本结巴分词的 `php` 实现，分词效果最好，尤其是新词发现，不足之处是性能较差，占用内存大。
+* `phpanalysis` 是 `php` 编写的一款轻量分词器，分词效果不错，性能介于 `scws` 和 `jieba` 两者之间。
 
-        composer require fukuball/jieba-php
+### 安装
 
-- 使用 `phpanalysis` 分词器，需安装 `lmz/phpanalysis`
+- **scws**
 
-        composer require lmz/phpanalysis
+```bash
+composer require vanry/scws
+```
 
-- 使用 `scws` 分词器，需安装 `vanry/scws`
+- **jieba**
 
-        composer require vanry/scws
+```bash
+composer require fukuball/jieba-php
+```
 
-分别在 `config/scout.php` 中的 `jieba`, `analysis` 和 `scws` 中修改配置。
+- **phpanalysis**
+
+```bash
+composer require lmz/phpanalysis
+```
+
+### 配置
+
+在 `.env` 文件中配置
+
+```bash
+TNTSEARCH_TOKENIZER=scws
+```
+
+> 可选值为 `default`, `scws`, `jieba`, `phpanalysis`, 其中 `default` 为 `TNTSearch` 自带的分词器。
+
 
 ## 高亮
 
-在 `view composer` 中引入 `highlighter`
+在 `view composer` 中引入 `highlighter`, 可使用以上任一分词器。
 
 ```php
 use Vanry\Scout\Highlighter;
+use Vanry\Scout\Tokenizers\PhpAnalysisTokenizer;
 
 // ...
 
 view()->composer('search', function ($view) {
-    $tokenizer = app('tntsearch.tokenizer')->driver();
-
-    $view->with('highlighter', new Highlighter($tokenizer));
+    $view->with('highlighter', new Highlighter(new PhpAnalysisTokenizer));
 });
 ```
 
