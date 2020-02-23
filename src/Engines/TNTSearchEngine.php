@@ -5,19 +5,30 @@ namespace Vanry\Scout\Engines;
 use Laravel\Scout\Builder;
 use TeamTNT\TNTSearch\TNTSearch;
 use Laravel\Scout\Engines\Engine;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder as Query;
 use TeamTNT\TNTSearch\Exceptions\IndexNotFoundException;
 
 class TNTSearchEngine extends Engine
 {
     /**
-     * @var TNTSearch
+     * The TNTSearch instance.
+     *
+     * @var \TeamTNT\TNTSearch\TNTSearch
      */
     protected $tnt;
 
     /**
+     * The Scout Builder
+     *
+     * @var \Laravel\Scout\Builder
+     */
+    protected $builder;
+
+    /**
      * Create a new engine instance.
      *
-     * @param TNTSearch $tnt
+     * @param \TeamTNT\TNTSearch\TNTSearch $tnt
      */
     public function __construct(TNTSearch $tnt)
     {
@@ -27,8 +38,7 @@ class TNTSearchEngine extends Engine
     /**
      * Update the given model in the index.
      *
-     * @param \Illuminate\Database\Eloquent\Collection $models
-     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     public function update($models)
@@ -62,8 +72,7 @@ class TNTSearchEngine extends Engine
     /**
      * Remove the given model from the index.
      *
-     * @param \Illuminate\Database\Eloquent\Collection $models
-     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $models
      * @return void
      */
     public function delete($models)
@@ -78,8 +87,7 @@ class TNTSearchEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param Builder $builder
-     *
+     * @param  \Laravel\Scout\Builder  $builder
      * @return mixed
      */
     public function search(Builder $builder)
@@ -96,10 +104,9 @@ class TNTSearchEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param Builder $builder
-     * @param int     $perPage
-     * @param int     $page
-     *
+     * @param  \Laravel\Scout\Builder $builder
+     * @param  int  $perPage
+     * @param  int  $page
      * @return mixed
      */
     public function paginate(Builder $builder, $perPage, $page)
@@ -126,8 +133,7 @@ class TNTSearchEngine extends Engine
     /**
      * Perform the given search on the engine.
      *
-     * @param Builder $builder
-     *
+     * @param  Builder  $builder
      * @return mixed
      */
     protected function performSearch(Builder $builder, array $options = [])
@@ -146,37 +152,92 @@ class TNTSearchEngine extends Engine
     /**
      * Map the given results to instances of the given model.
      *
-     * @param Builder $builder
-     * @param mixed $results
-     * @param \Illuminate\Database\Eloquent\Model $model
-     *
+     * @param  \Laravel\Scout\Builder $builder
+     * @param  mixed $results
+     * @param  \Illuminate\Database\Eloquent\Model $model
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function map(Builder $builder, $results, $model)
     {
-        if (is_null($results['ids']) || count($results['ids']) === 0) {
-            return $model->newCollection();
+        return (is_null($results['ids']) || count($results['ids']) === 0)
+            ? $model->newCollection()
+            : $this->mapModels($builder, $results, $model);
+    }
+
+    /**
+     * Map eloquent models with search results.
+     *
+     * @param  \Laravel\Scout\Builder $builder
+     * @param  mixed $results
+     * @param  \Illuminate\Database\Eloquent\Model $model
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    protected function mapModels(Builder $builder, $results, $model)
+    {
+        $this->builder = $builder;
+
+        $query = $model->whereIn(
+            $model->getQualifiedKeyName(),
+            collect($results['ids'])->values()->all()
+        );
+
+        if ($this->usesSoftDelete($model) && config('scout.soft_delete')) {
+            $query = $this->handleSoftDelete($query);
         }
 
-        $keys = collect($results['ids'])->values()->all();
+        $query = $this->applyWheres($query);
 
-        $models = $model->whereIn($model->getQualifiedKeyName(), $keys)->get()->keyBy($model->getKeyName());
+        $query = $this->applyOrders($query, $results['ids']);
 
-        $fieldsWheres = array_keys($builder->wheres);
+        return $query->get();
+    }
 
-        return collect($results['ids'])->map(function ($hit) use ($models) {
-            return $models->has($hit) ? $models[$hit] : null;
-        })->filter(function ($model) use ($fieldsWheres, $builder) {
-            return ! is_null($model) && array_reduce($fieldsWheres, function ($carry, $item) use ($model, $builder) {
-                return $carry && $model[$item] == $builder->wheres[$item];
-            }, true);
-        });
+    /**
+     * Determine if the given model uses soft deletes.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return bool
+     */
+    protected function usesSoftDelete($model)
+    {
+        return in_array(SoftDeletes::class, class_uses_recursive($model));
+    }
+
+    protected function handleSoftDelete(Query $query)
+    {
+        if (! array_key_exists('__soft_deleted', $this->builder->wheres)) {
+            $query->withTrashed();
+        } elseif ($this->builder->wheres['__soft_deleted'] == 1) {
+            $query->onlyTrashed();
+        }
+
+        return $query;
+    }
+
+    protected function applyWheres(Query $query)
+    {
+        unset($this->builder->wheres['__soft_deleted']);
+
+        return $query->where($this->builder->wheres);
+    }
+
+    protected function applyOrders(Query $query, array $ids)
+    {
+        if (empty($this->builder->orders)) {
+            return $query->orderByRaw(
+                sprintf('field(%s,%s)', $query->getModel()->getQualifiedKeyName(), implode(',', $ids))
+            );
+        }
+
+        return array_reduce($this->builder->orders, function ($query, $order) {
+            return $query->orderBy($order['column'], $order['direction']);
+        }, $query);
     }
 
     /**
      * Pluck and return the primary keys of the given results.
      *
-     * @param mixed $results
+     * @param  mixed $results
      * @return \Illuminate\Support\Collection
      */
     public function mapIds($results)
@@ -187,8 +248,7 @@ class TNTSearchEngine extends Engine
     /**
      * Get the total count from a raw result returned by the engine.
      *
-     * @param mixed $results
-     *
+     * @param  mixed  $results
      * @return int
      */
     public function getTotalCount($results)
@@ -226,6 +286,12 @@ class TNTSearchEngine extends Engine
         $this->tnt->createIndex($this->indexName($model));
     }
 
+    /**
+     * Flush all of the model's records from the engine.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return void
+     */
     public function flush($model)
     {
         $indexPath = $this->indexPath($model);
