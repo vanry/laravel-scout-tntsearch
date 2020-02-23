@@ -12,6 +12,7 @@ use TeamTNT\TNTSearch\Exceptions\IndexNotFoundException;
 class TNTSearchEngine extends Engine
 {
     const LIMIT = 10000;
+
     /**
      * The TNTSearch instance.
      *
