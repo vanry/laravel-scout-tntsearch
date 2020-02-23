@@ -9,7 +9,7 @@
 composer require vanry/laravel-scout-tntsearch
 ```
 
-### Laravel
+#### Laravel
 
 `Laravel` 具有包自动发现功能，不用手动添加服务提供者。
 
@@ -19,13 +19,13 @@ composer require vanry/laravel-scout-tntsearch
 php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
 ```
 
-如果要修改 `tntsearch` 默认配置，也可发布 `tntsearch` 配置文件
+如需修改 `tntsearch` 默认配置，也可发布 `tntsearch` 配置文件
 
 ```bash
 php artisan vendor:publish --provider="Vanry\Scout\TNTSearchScoutServiceProvider"
 ```
 
-### Lumen
+#### Lumen
 
 `Lumen` 需将服务提供者添加到 `bootstrap/app.php`
 
@@ -40,7 +40,11 @@ $app->register(Vanry\Scout\LumenServiceProvider::class);
 $app->register(Laravel\Scout\ScoutServiceProvider::class);
 ```
 
-### 启用
+将 `laravel scout` 配置文件 `scout.php` 复制到项目根目录下的 `config` 目录下，不存在就创建。
+
+如需修改 `tntsearch` 默认配置，则将配置文件 `tntsearch.php` 复制到项目根目录下的 `config` 目录下。
+
+#### 启用
 
 在 `.env` 文件中添加
 
@@ -48,6 +52,57 @@ $app->register(Laravel\Scout\ScoutServiceProvider::class);
 SCOUT_DRIVER=tntsearch
 ```
 
+## 中文分词
+
+目前支持 `scws`, `jieba` 和 `phpanalysis` 中文分词。
+
+#### 对比
+
+* `scws` 是用 `C` 语言编写的 `php` 扩展，性能最佳，分词效果好，但不支持 `Windows` 系统。
+* `jieba` 为 `python` 版本结巴分词的 `php` 实现，分词效果最好，尤其是新词发现，不足之处是性能较差，占用内存大。
+* `phpanalysis` 是 `php` 编写的一款轻量分词器，分词效果不错，性能介于 `scws` 和 `jieba` 两者之间。
+
+#### 安装
+
+- **scws**
+
+```bash
+composer require vanry/scws
+```
+
+- **jieba**
+
+```bash
+composer require fukuball/jieba-php
+```
+
+- **phpanalysis**
+
+```bash
+composer require lmz/phpanalysis
+```
+
+#### 配置
+
+在 `.env` 文件中配置
+
+```bash
+TNTSEARCH_TOKENIZER=scws
+```
+
+> 可选值为 `default`, `scws`, `jieba`, `phpanalysis`, 其中 `default` 为 `TNTSearch` 自带的分词器。
+
+#### 问题
+
+使用 `jieba` 分词可能会出现内存分配不足的错误信息:
+
+> PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes)
+
+在代码中增加内存限制即可
+
+```php
+ini_set('memory_limit', '1024M');
+```
 
 ## 用法
 
@@ -94,58 +149,6 @@ php artisan tntsearch:import App\\Post
 
 ```php
 Post::search('laravel教程')->get();
-```
-
-## 中文分词
-
-目前支持 `scws`, `jieba` 和 `phpanalysis` 中文分词。
-
-### 对比
-
-* `scws` 是用 `C` 语言编写的 `php` 扩展，性能最佳，分词效果好，但不支持 `Windows` 系统。
-* `jieba` 为 `python` 版本结巴分词的 `php` 实现，分词效果最好，尤其是新词发现，不足之处是性能较差，占用内存大。
-* `phpanalysis` 是 `php` 编写的一款轻量分词器，分词效果不错，性能介于 `scws` 和 `jieba` 两者之间。
-
-### 安装
-
-- **scws**
-
-```bash
-composer require vanry/scws
-```
-
-- **jieba**
-
-```bash
-composer require fukuball/jieba-php
-```
-
-- **phpanalysis**
-
-```bash
-composer require lmz/phpanalysis
-```
-
-### 配置
-
-在 `.env` 文件中配置
-
-```bash
-TNTSEARCH_TOKENIZER=scws
-```
-
-> 可选值为 `default`, `scws`, `jieba`, `phpanalysis`, 其中 `default` 为 `TNTSearch` 自带的分词器。
-
-### 问题
-
-使用 `jieba` 分词可能会出现内存分配不足的错误信息:
-
-> PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes)
-
-在代码中增加内存限制即可
-
-```php
-ini_set('memory_limit', '1024M');
 ```
 
 ## 高亮
