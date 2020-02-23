@@ -136,6 +136,17 @@ TNTSEARCH_TOKENIZER=scws
 
 > 可选值为 `default`, `scws`, `jieba`, `phpanalysis`, 其中 `default` 为 `TNTSearch` 自带的分词器。
 
+### 问题
+
+使用 `jieba` 分词可能会出现内存分配不足的错误信息:
+
+> PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes)
+
+在代码中增加内存限制即可
+
+```php
+ini_set('memory_limit', '1024M');
+```
 
 ## 高亮
 
