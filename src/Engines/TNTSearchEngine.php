@@ -11,6 +11,7 @@ use TeamTNT\TNTSearch\Exceptions\IndexNotFoundException;
 
 class TNTSearchEngine extends Engine
 {
+    const LIMIT = 10000;
     /**
      * The TNTSearch instance.
      *
@@ -146,7 +147,7 @@ class TNTSearchEngine extends Engine
             return call_user_func($builder->callback, $this->tnt, $builder->query, $options);
         }
 
-        return $this->tnt->search($builder->query, $builder->limit ?: 10000);
+        return $this->tnt->search($builder->query, $builder->limit ?: static::LIMIT);
     }
 
     /**
