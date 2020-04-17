@@ -5,6 +5,7 @@ namespace Vanry\Scout\Engines;
 use Laravel\Scout\Builder;
 use TeamTNT\TNTSearch\TNTSearch;
 use Laravel\Scout\Engines\Engine;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder as Query;
 use TeamTNT\TNTSearch\Exceptions\IndexNotFoundException;
@@ -227,7 +228,11 @@ class TNTSearchEngine extends Engine
     {
         if (empty($this->builder->orders)) {
             return $query->orderByRaw(
-                sprintf('field(%s,%s)', $query->getModel()->getQualifiedKeyName(), implode(',', $ids))
+                sprintf('field(%s%s,%s)',
+                    DB::getTablePrefix(),
+                    $query->getModel()->getQualifiedKeyName(),
+                    implode(',', $ids)
+                )
             );
         }
 
