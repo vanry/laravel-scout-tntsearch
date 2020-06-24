@@ -56,7 +56,7 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
 
             $tag = $segments[2] ?? "'em'";
 
-            return "<?php echo app(\Vanry\Scout\Highlighter::class)->highlight($text, $query, $tag);?>";
+            return "<?php echo app(\Vanry\Scout\Highlighter::class)->highlight($text, $query, $tag); ?>";
         });
     }
 

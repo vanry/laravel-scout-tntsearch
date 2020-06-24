@@ -13,8 +13,10 @@ class LumenServiceProvider extends TNTSearchScoutServiceProvider
      */
     public function register()
     {
-        $this->configure('scout');
-        $this->configure('tntsearch');
+        $this->app->configure('scout');
+        $this->app->configure('tntsearch');
+
+        $this->mergeConfigFrom(__DIR__.'/../config/tntsearch.php', 'tntsearch');
 
         $this->app->instance('path.config', $this->app->configPath());
         $this->app->singleton(TokenizerInterface::class, $this->getConfig()['tokenizer']);
@@ -22,5 +24,17 @@ class LumenServiceProvider extends TNTSearchScoutServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands(ImportCommand::class);
         }
+    }
+
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        $this->app->make('view');
+
+        parent::boot();
     }
 }
