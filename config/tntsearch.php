@@ -2,29 +2,25 @@
 
 return [
 
-    'default' => env('TNTSEARCH_TOKENIZER', 'tntsearch'),
+    'default' => env('TNTSEARCH_TOKENIZER', 'phpanalysis'),
 
     'storage' => storage_path('indices'),
 
     'stemmer' => TeamTNT\TNTSearch\Stemmer\NoStemmer::class,
 
     'tokenizers' => [
-        'tntsearch' => [
-            'driver' => TeamTNT\TNTSearch\Support\Tokenizer::class,
-        ],
-
-        'jieba' => [
-            'driver' => Vanry\Scout\Tokenizers\JiebaTokenizer::class,
-            'dict' => 'small',
-            //'user_dict' => resource_path('dicts/mydict.txt'),
-        ],
-
         'phpanalysis' => [
             'driver' => Vanry\Scout\Tokenizers\PhpAnalysisTokenizer::class,
             'to_lower' => true,
             'unit_word' => true,
             'differ_max' => true,
             'result_type' => 2,
+        ],
+
+        'jieba' => [
+            'driver' => Vanry\Scout\Tokenizers\JiebaTokenizer::class,
+            'dict' => 'small',
+            //'user_dict' => resource_path('dicts/mydict.txt'),
         ],
 
         'scws' => [
