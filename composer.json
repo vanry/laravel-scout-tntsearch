@@ -29,8 +29,11 @@
     },
     "autoload": {
         "psr-4": {
-            "Vanry\\Scout\\": "src/"
-        }
+            "Vanry\\Scout\\": "src"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
