@@ -2,11 +2,13 @@
 
 namespace Vanry\Scout;
 
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
 use Laravel\Scout\EngineManager;
+use TeamTNT\TNTSearch\Support\TokenizerInterface;
 use TeamTNT\TNTSearch\TNTSearch;
 use Vanry\Scout\Console\ImportCommand;
-use Illuminate\Support\ServiceProvider;
 use Vanry\Scout\Engines\TNTSearchEngine;
 
 class TNTSearchScoutServiceProvider extends ServiceProvider
@@ -27,6 +29,8 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
         }
 
         $this->mergeConfigFrom(__DIR__.'/../config/tntsearch.php', 'tntsearch');
+
+        $this->app->singleton(TokenizerInterface::class, $this->getConfig()['tokenizer']);
     }
 
     /**
@@ -43,6 +47,16 @@ class TNTSearchScoutServiceProvider extends ServiceProvider
             $tnt->setDatabaseHandle(app('db')->connection()->getPdo());
 
             return new TNTSearchEngine($tnt);
+        });
+
+        Blade::directive('highlight', function ($expression) {
+            $segments = array_map('trim', explode(',', $expression));
+
+            list($text, $query) = $segments;
+
+            $tag = $segments[2] ?? "'em'";
+
+            return "<?php echo app(\Vanry\Scout\Highlighter::class)->highlight($text, $query, $tag);?>";
         });
     }
 
