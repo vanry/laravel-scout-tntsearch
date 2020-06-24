@@ -17,6 +17,7 @@ class LumenServiceProvider extends TNTSearchScoutServiceProvider
         $this->configure('tntsearch');
 
         $this->app->instance('path.config', $this->app->configPath());
+        $this->app->singleton(TokenizerInterface::class, $this->getConfig()['tokenizer']);
 
         if ($this->app->runningInConsole()) {
             $this->commands(ImportCommand::class);
