@@ -131,7 +131,7 @@ composer require fukuball/jieba-php
 TNTSEARCH_TOKENIZER=scws
 
 # jieba
-TNTSEARCH_TOKENIZER=scws
+TNTSEARCH_TOKENIZER=jieba
 ```
 
 ### 问题
