@@ -31,6 +31,7 @@ php artisan vendor:publish --provider="Vanry\Scout\TNTSearchScoutServiceProvider
 // bootstrap/app.php
 
 // 取消注释
+$app->withFacades();
 $app->withEloquent()
 
 // 注意先后顺序
