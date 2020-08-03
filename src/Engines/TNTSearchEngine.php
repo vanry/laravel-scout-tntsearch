@@ -281,7 +281,7 @@ class TNTSearchEngine extends Engine
 
     protected function indexPath($model)
     {
-        return $this->tnt->config['storage'].'/'.$this->indexName($model);
+        return $this->tnt->config['storage'].$this->indexName($model);
     }
 
     protected function createIndex($model)
