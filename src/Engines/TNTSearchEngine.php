@@ -240,6 +240,6 @@ class TNTSearchEngine extends Engine
 
     protected function getIndexPath($model)
     {
-        return sprintf('%s/%s.index', $this->tnt->config['storage'], $model->searchableAs());
+        return sprintf('%s/%s.index', rtrim($this->tnt->config['storage'], '/'), $model->searchableAs());
     }
 }
