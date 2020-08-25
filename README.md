@@ -155,9 +155,9 @@ ini_set('memory_limit', '1024M');
 ```
 @highlight($text, $query, $tag);
 ```
-> $text: 要高亮的字段
-> $query: 搜索词
-> $tag: 高亮的 html 标签
+> * $text: 要高亮的字段
+> * $query: 搜索词
+> * $tag: 高亮的 html 标签
 
 ```php
 // 高亮 title 字段
