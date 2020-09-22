@@ -231,7 +231,7 @@ class TNTSearchEngine extends Engine
                 sprintf('field(%s%s,%s)',
                     DB::getTablePrefix(),
                     $query->getModel()->getQualifiedKeyName(),
-                    implode(',', $ids)
+                    implode(',', array_filter($ids))
                 )
             );
         }
