@@ -5,7 +5,6 @@ namespace Vanry\Scout\Engines;
 use Laravel\Scout\Builder;
 use TeamTNT\TNTSearch\TNTSearch;
 use Laravel\Scout\Engines\Engine;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder as Query;
 use TeamTNT\TNTSearch\Exceptions\IndexNotFoundException;
@@ -179,10 +178,7 @@ class TNTSearchEngine extends Engine
     {
         $this->builder = $builder;
 
-        $query = $model->whereIn(
-            $model->getQualifiedKeyName(),
-            collect($results['ids'])->values()->all()
-        );
+        $query = $model->whereIn($model->getQualifiedKeyName(), $results['ids']);
 
         if ($this->usesSoftDelete($model) && config('scout.soft_delete')) {
             $query = $this->handleSoftDelete($query);
@@ -190,9 +186,13 @@ class TNTSearchEngine extends Engine
 
         $query = $this->applyWheres($query);
 
-        $query = $this->applyOrders($query, $results['ids']);
+        $query = $this->applyOrders($query);
 
-        return $query->get();
+        $models = $query->get();
+
+        return empty($this->builder->orders) ? $models->sortBy(function ($model) use ($results) {
+            return array_search($model->getKey(), $results['ids']);
+        })->values() : $models;
     }
 
     /**
@@ -224,18 +224,8 @@ class TNTSearchEngine extends Engine
         return $query->where($this->builder->wheres);
     }
 
-    protected function applyOrders(Query $query, array $ids)
+    protected function applyOrders(Query $query)
     {
-        if (empty($this->builder->orders)) {
-            return $query->orderByRaw(
-                sprintf('field(%s%s,%s)',
-                    DB::getTablePrefix(),
-                    $query->getModel()->getQualifiedKeyName(),
-                    implode(',', array_filter($ids))
-                )
-            );
-        }
-
         return array_reduce($this->builder->orders, function ($query, $order) {
             return $query->orderBy($order['column'], $order['direction']);
         }, $query);
