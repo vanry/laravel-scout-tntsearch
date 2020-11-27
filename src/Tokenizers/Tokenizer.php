@@ -15,6 +15,10 @@ abstract class Tokenizer implements TokenizerInterface
         return $config;
     }
 
+    public function getPattern()
+    {
+    }
+
     public function tokenize($text, $stopwords = [])
     {
         $tokens = $this->getTokens($text);
