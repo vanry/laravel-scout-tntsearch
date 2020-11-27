@@ -2,12 +2,12 @@
 
 namespace Vanry\Scout\Engines;
 
-use Laravel\Scout\Builder;
-use TeamTNT\TNTSearch\TNTSearch;
-use Laravel\Scout\Engines\Engine;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder as Query;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Builder;
+use Laravel\Scout\Engines\Engine;
 use TeamTNT\TNTSearch\Exceptions\IndexNotFoundException;
+use TeamTNT\TNTSearch\TNTSearch;
 
 class TNTSearchEngine extends Engine
 {
@@ -115,21 +115,32 @@ class TNTSearchEngine extends Engine
     {
         $results = $this->search($builder);
 
+        $results['hits'] = $this->getFilteredTotalCount($builder, $results);
+
         if ($builder->limit) {
-            $results['hits'] = $builder->limit;
+            $results['hits'] = min($results['hits'], $builder->limit);
         }
 
         $chunks = array_chunk($results['ids'], $perPage);
 
-        if (! empty($chunks)) {
-            if (array_key_exists($page - 1, $chunks)) {
-                $results['ids'] = $chunks[$page - 1];
-            } else {
-                $results['ids'] = end($chunks);
-            }
-        }
+        $results['ids'] = $chunks[$page - 1] ?? [];
 
         return $results;
+    }
+
+    protected function getFilteredTotalCount(Builder $builder, $results)
+    {
+        $this->builder = $builder;
+
+        $model = $builder->model;
+
+        $query = $model->whereIn($model->getQualifiedKeyName(), $results['ids']);
+
+        if ($this->usesSoftDelete($model) && config('scout.soft_delete')) {
+            $query = $this->handleSoftDelete($query);
+        }
+
+        return $this->applyWheres($query)->count();
     }
 
     /**
@@ -154,24 +165,22 @@ class TNTSearchEngine extends Engine
     /**
      * Map the given results to instances of the given model.
      *
-     * @param  \Laravel\Scout\Builder $builder
-     * @param  mixed $results
-     * @param  \Illuminate\Database\Eloquent\Model $model
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  mixed  $results
+     * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function map(Builder $builder, $results, $model)
     {
-        return (is_null($results['ids']) || count($results['ids']) === 0)
-            ? $model->newCollection()
-            : $this->mapModels($builder, $results, $model);
+        return (empty($results['ids'])) ? $model->newCollection() : $this->mapModels($builder, $results, $model);
     }
 
     /**
      * Map eloquent models with search results.
      *
-     * @param  \Laravel\Scout\Builder $builder
-     * @param  mixed $results
-     * @param  \Illuminate\Database\Eloquent\Model $model
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  mixed  $results
+     * @param  \Illuminate\Database\Eloquent\Model  $model
      * @return \Illuminate\Database\Eloquent\Collection
      */
     protected function mapModels(Builder $builder, $results, $model)
@@ -277,7 +286,7 @@ class TNTSearchEngine extends Engine
     protected function createIndex($model)
     {
         if (! file_exists($this->tnt->config['storage'])) {
-            mkdir($this->tnt->config['storage'], 0777, true);
+            mkdir($this->tnt->config['storage'], 0755, true);
         }
 
         $this->tnt->createIndex($this->indexName($model));
