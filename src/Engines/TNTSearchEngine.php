@@ -287,6 +287,8 @@ class TNTSearchEngine extends Engine
     {
         if (! file_exists($this->tnt->config['storage'])) {
             mkdir($this->tnt->config['storage'], 0755, true);
+
+            file_put_contents($this->tnt->config['storage'].'.gitignore', "*\n!.gitignore\n");
         }
 
         $this->tnt->createIndex($this->indexName($model));
