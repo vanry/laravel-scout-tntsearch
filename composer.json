@@ -20,7 +20,7 @@
         "illuminate/database": "~5.5|^6.0|^7.0|^8.0",
         "illuminate/support": "~5.5|^6.0|^7.0|^8.0",
         "illuminate/view": "~5.5|^6.0|^7.0|^8.0",
-        "laravel/scout": "^6.0|^7.0|^8.0",
+        "laravel/scout": "^7.0|^8.0|^9.0",
         "lmz/phpanalysis": "^1.0",
         "teamtnt/tntsearch": "^2.0"
     },
