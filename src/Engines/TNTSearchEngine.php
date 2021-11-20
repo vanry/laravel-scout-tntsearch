@@ -4,6 +4,7 @@ namespace Vanry\Scout\Engines;
 
 use Illuminate\Database\Eloquent\Builder as Query;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\Engine;
 use TeamTNT\TNTSearch\Exceptions\IndexNotFoundException;
@@ -47,7 +48,7 @@ class TNTSearchEngine extends Engine
     {
         $model = $models->first();
 
-        $index = $this->initIndex($model);
+        $index = $this->initIndex($model->searchableAs());
 
         $index->setPrimaryKey($model->getKeyName());
         $index->setStopWords($this->tnt->config['stopwords'] ?? []);
@@ -79,11 +80,26 @@ class TNTSearchEngine extends Engine
      */
     public function delete($models)
     {
-        $index = $this->initIndex($models->first());
+        $index = $this->initIndex($models->first()->searchableAs());
 
         $models->each(function ($model) use ($index) {
             $index->delete($model->getKey());
         });
+    }
+
+    /**
+     * Delete a search index.
+     *
+     * @param  string  $name
+     * @return mixed
+     */
+    public function deleteIndex($name)
+    {
+        $indexPath = $this->indexPath($name);
+
+        if (file_exists($indexPath)) {
+            unlink($indexPath);
+        }
     }
 
     /**
@@ -176,14 +192,32 @@ class TNTSearchEngine extends Engine
     }
 
     /**
+     * Map the given results to instances of the given model via a lazy collection.
+     *
+     * @param  \Laravel\Scout\Builder  $builder
+     * @param  mixed  $results
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return \Illuminate\Support\LazyCollection
+     */
+    public function lazyMap(Builder $builder, $results, $model)
+    {
+        return (empty($results['ids']))
+            ? LazyCollection::make()
+            : $this->mapModels($builder, $results, $model, function (Query $query) {
+                return $query->cursor();
+            });
+    }
+
+    /**
      * Map eloquent models with search results.
      *
      * @param  \Laravel\Scout\Builder  $builder
      * @param  mixed  $results
      * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param  callable  $callback
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    protected function mapModels(Builder $builder, $results, $model)
+    protected function mapModels(Builder $builder, $results, $model, callable $callback = null)
     {
         $this->builder = $builder;
 
@@ -197,7 +231,7 @@ class TNTSearchEngine extends Engine
 
         $query = $this->applyOrders($query);
 
-        $models = $query->get();
+        $models = is_null($callback) ? $query->get() : $callback($query);
 
         return empty($this->builder->orders) ? $models->sortBy(function ($model) use ($results) {
             return array_search($model->getKey(), $results['ids']);
@@ -262,28 +296,28 @@ class TNTSearchEngine extends Engine
         return $results['hits'];
     }
 
-    protected function initIndex($model)
+    protected function initIndex($name)
     {
-        if (! file_exists($this->indexPath($model))) {
-            $this->createIndex($model);
+        if (! file_exists($this->indexPath($name))) {
+            $this->createIndex($name);
         }
 
-        $this->tnt->selectIndex($this->indexName($model));
+        $this->tnt->selectIndex($this->indexName($name));
 
         return $this->tnt->getIndex();
     }
 
-    protected function indexName($model)
+    protected function indexName($name)
     {
-        return $model->searchableAs().'.index';
+        return "{$name}.index";
     }
 
-    protected function indexPath($model)
+    protected function indexPath($name)
     {
-        return $this->tnt->config['storage'].$this->indexName($model);
+        return $this->tnt->config['storage'].$this->indexName($name);
     }
 
-    protected function createIndex($model)
+    public function createIndex($name, array $options = [])
     {
         if (! file_exists($this->tnt->config['storage'])) {
             mkdir($this->tnt->config['storage'], 0755, true);
@@ -291,7 +325,7 @@ class TNTSearchEngine extends Engine
             file_put_contents($this->tnt->config['storage'].'.gitignore', "*\n!.gitignore\n");
         }
 
-        $this->tnt->createIndex($this->indexName($model));
+        $this->tnt->createIndex($this->indexName($name), $options['disableOutput'] ?? false);
     }
 
     /**
@@ -302,10 +336,6 @@ class TNTSearchEngine extends Engine
      */
     public function flush($model)
     {
-        $indexPath = $this->indexPath($model);
-
-        if (file_exists($indexPath)) {
-            unlink($indexPath);
-        }
+        $this->deleteIndex($model->searchableAs());
     }
 }
